@@ -1,4 +1,4 @@
-// @author Bababoy
+// @author @Bababoy#1524
 // Licensed as idk
 
 function addCss(cssCode) {
