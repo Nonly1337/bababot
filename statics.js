@@ -1,299 +1,571 @@
-var storeVars = function (target) {
-  return new Proxy(target, {
-    has(target, prop) {
-      return true;
+// ==UserScript==
+
+// @name         Bababot v4
+// @namespace    http://tampermonkey.net/
+// @version      v3.0
+// @description  Bababot 100%
+// @author       Bababoy
+// @include      https://pixelplace.io/*
+// @icon         https://i1.sndcdn.com/artworks-000173440759-sz0xbo-t500x500.jpg
+// @require      https://pixelplace.io/js/jquery.min.js?v2=1
+// @require      https://pixelplace.io/js/jquery-ui.min.js?v2=1
+// @require      https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js
+// @require      https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js
+// @require      https://code.jquery.com/ui/1.12.1/jquery-ui.min.js
+// @require      https://raw.githubusercontent.com/bababoyisntapopularname/bababot/main/util.js
+// @require      https://raw.githubusercontent.com/bababoyisntapopularname/bababot/main/bababot_ws.js
+// @require      https://raw.githubusercontent.com/bababoyisntapopularname/bababot/main/statics.js
+// @run-at       document-start
+// @grant        none
+// ==/UserScript==
+
+//Sorry i had to use @include!
+//I thought it would be better
+
+// CSS Stylesheet imports: Jquery-UI, toastr
+uBababot.jRequire(
+  "https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.2/chroma.min.js"
+);
+uBababot.cImport("https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css");
+uBababot.cImport(
+  "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
+);
+// -
+with (BBY) {
+  var tosend = [];
+
+  // config
+  var cfg = {
+    timeout: localStorage.timeout - 0 || 100,
+  };
+
+  //--BEGIN_TASKER.JS_BEGIN--
+  var Tasker = {
+    _tasks: [],
+    _i: Number(0),
+    addTask: function (callback) {
+      this._tasks.push(callback);
     },
-    get(target, prop) {
-      return (prop in target ? target : window)[prop];
+    getTask: function () {
+      var task = this._tasks[this._i];
+      if (task != undefined) {
+        this._i++;
+      }
+      return task;
     },
-  });
-};
-BBY = {};
-with (storeVars(BBY)) {
-  /**
-   * @description Statics of Bababot
-   */
-  var BABABOT_CONSOLE_CSS = `background: #03CEA4;
-color: #FFFFFF;
-font-family: Sans-serif;
-font-size: 2rem;
-display: inline-block;
-border: 5px #A3A5C3 solid;
-padding: 5px;
-margin: 5px;`,
-    BABABOT_CANVAS_CSS = {
-      textAlign: "center",
-      border: "black 1px dotted",
-      paddingLeft: "0",
-      paddingRight: "0",
-      marginLeft: "auto",
-      marginRight: "auto",
-      display: "block",
+    reset: function () {
+      this._i = 0;
     },
-    BABABOT_MENU_ELEMENT_CSS = {
-      border: "2px rgb(8,8,8) solid",
-      background:
-        "linear-gradient(90deg, rgba(30,30,30,1) 0%, rgba(34,34,34,1) 100%)",
-      "border-radius": "0px",
-      color: "#d9d2d2",
-      padding: "5px",
-      "font-family": "monospace",
-      margin: "10px",
+    destroy: function () {
+      this._tasks = [];
+      this.reset();
     },
-    BABABOT_UI_MENU_CSS = {
-      display: "none",
-      position: "absolute",
-      "font-family": "Monospace",
-      color: "#d9d2d2",
-      background: "rgb(27,27,27)",
-      border: "5px rgb(188,26,26) solid",
-      transform: "translate(-50%, -50%)",
-      top: "50%",
-      left: "50%",
-      padding: "20px",
-    },
-    BABABOT_TEXT_CSS = {
-      display: "block",
-      position: "absolute",
-      width: "auto",
-      bottom: "11px",
-      right: "250px",
-      color: "#ffffff",
-      "text-shadow": "1px 1px 1px #000000",
-      "font-size": "0.9em",
+  };
+  setInterval(function () {
+    var task = Tasker.getTask();
+    if (task == undefined) {
+      return;
+    }
+    while (BababotWS.BBY_get_pixel(task.x, task.y) == task.color) {
+      task = Tasker.getTask();
+      if (task == undefined) {
+        return;
+      }
+    }
+    BababotWS.BBY_put_pixel(task.x, task.y, task.color);
+  }, cfg.timeout);
+
+  function AntiFilterDictionaryFactory() {
+    var factory = {};
+    function get(name) {
+      if (factory[name] == undefined) {
+        //UUID
+        factory[name] = (() =>
+          ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (a) =>
+            (a ^ ((Math.random() * 16) >> (a / 4))).toString(16)
+          ))();
+      }
+      return factory[name];
+    }
+    return {
+      get: get,
     };
-  /**
-   * @type {ColorPacket[]}
-   */
-  var Colors = [
-    { code: "0", hex: "#FFFFFF" },
-    { code: "1", hex: "#C4C4C4" },
-    { code: "2", hex: "#888888" },
-    { code: "3", hex: "#555555" },
-    { code: "4", hex: "#222222" },
-    { code: "5", hex: "#000000" },
-    { code: "6", hex: "#006600" },
-    { code: "7", hex: "#22B14C" },
-    { code: "8", hex: "#02BE01" },
-    { code: "10", hex: "#94E044" },
-    { code: "11", hex: "#FBFF5B" },
-    { code: "12", hex: "#E5D900" },
-    { code: "13", hex: "#E6BE0C" },
-    { code: "14", hex: "#E59500" },
-    { code: "15", hex: "#A06A42" },
-    { code: "16", hex: "#99530D" },
-    { code: "17", hex: "#633C1F" },
-    { code: "18", hex: "#6B0000" },
-    { code: "19", hex: "#9F0000" },
-    { code: "20", hex: "#E50000" },
-    { code: "22", hex: "#BB4F00" },
-    { code: "23", hex: "#FF755F" },
-    { code: "24", hex: "#FFC49F" },
-    { code: "25", hex: "#FFDFCC" },
-    { code: "26", hex: "#FFA7D1" },
-    { code: "27", hex: "#CF6EE4" },
-    { code: "28", hex: "#EC08EC" },
-    { code: "29", hex: "#820080" },
-    { code: "31", hex: "#020763" },
-    { code: "32", hex: "#0000EA" },
-    { code: "33", hex: "#044BFF" },
-    { code: "34", hex: "#6583CF" },
-    { code: "35", hex: "#36BAFF" },
-    { code: "36", hex: "#0083C7" },
-    { code: "37", hex: "#00D3DD" },
-  ];
+  }
+  var dictionary = AntiFilterDictionaryFactory();
+  console.log(dictionary.get("scope"));
+  globalThis[dictionary.get("scope")] = new Object();
+  // ! Do not just install this.
+  // ! This has to be executed by a backend to actually interact with pixelplace.
+  // ! And this isnt a userscript. It's just a normal javascript code.
+  // ! It's built like this to actually auto-update!
+  // ! Just don't worry. There isnt any other reason that this executes from The Web.
+  // * You can just inspect the code. You will not see any bad thing.
+  // * Remember to bleach these eyes after you look at my code :D
+  // *                          -Bababoy
 
-  // https://stackoverflow.com/a/36722579/7816145
+  // ! Runs at window-load.
+
   /**
-   * Converts an HSL color value to RGB. Conversion formula
-   * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-   * Assumes h, s, and l are contained in the set [0, 1] and
-   * returns r, g, and b in the set [0, 255].
-   *
-   * @param   {number}  h       The hue
-   * @param   {number}  s       The saturation
-   * @param   {number}  l       The lightness
-   * @return  {Array}           The RGB representation
+   * @typedef {{hex: string, code: string}} ColorPacket
    */
-  var hslToRgb = function (h, s, l) {
-    h = h / 360;
-    s = s / 100;
-    l = l / 100;
-    var r, g, b;
-    if (s == 0) {
-      r = g = b = l;
-    } else {
-      var hue2rgb = function (p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      };
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
+  //
+
+  function log(thing) {
+    console.log("%c%s", BABABOT_CONSOLE_CSS, thing);
+  }
+
+  function stressTest() {
+    var x = performance.now();
+    for (var m = 0; m < 1e6; m++) {
+      (function () {
+        return Math.floor(Math.PI * 5);
+      })();
     }
-    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    var y = performance.now();
+    return y - x;
+  }
+  log("Welcome to bababot!");
+  generateTextDOM("Bababot configuration passed.");
+  generateTextDOM(
+    Math.floor(stressTest()) +
+      " ms process time on performance test ( [f(x)=floor(𝜋*5)]*1e+6)"
+  );
+
+  var Menu = {
+    preview: $("<div>"),
+    //style="display: none"
+    file: $('<input type="file">').attr("id", dictionary.get("file_input")),
+    file_label: $("<label>")
+      .attr("for", dictionary.get("file_input"))
+      .text("Image file (jpg,png etc.)"),
+    width: $('<input type="number" placeholder="Width">'),
+    height: $('<input type="number" placeholder="Height">'),
+    x: $('<input type="number" placeholder="X">'),
+    y: $('<input type="number" placeholder="Y">'),
+    start: $("<button>").html("Ŝtart Botting"),
+    original: $("<p>"),
+    stop: $("<button>").text("Stop Botting"),
+    canvas: document.createElement("canvas"),
+    img: new Image(),
+    pixif: undefined,
+    state: false,
+    rds: undefined,
+    intervalCode: undefined,
   };
 
+  Menu.file.css("display", "none");
+  $(Menu.canvas).css(BABABOT_CANVAS_CSS);
+  $([Menu.x[0], Menu.y[0]]).css("width", "35%");
+  $([
+    Menu.start[0],
+    Menu.stop[0],
+    Menu.file_label[0],
+    Menu.x[0],
+    Menu.y[0],
+    Menu.width[0],
+    Menu.height[0],
+  ]).css(BABABOT_MENU_ELEMENT_CSS);
+  var uiMenu = $("<div>");
+
+  Menu.preview.append(
+    $(Menu.canvas),
+    $("<div>").append(Menu.width, Menu.height),
+    Menu.file_label,
+    Menu.file,
+    Menu.original,
+    $("<div>").append(Menu.x, Menu.y),
+    $("<div>").append(Menu.start, Menu.stop)
+  );
+  uiMenu.append(Menu.preview);
+
+  globalThis[dictionary.get("scope")].Menu = Menu;
   /**
-   * Format our match into our final display
+   * @param {[Number,Number]} coords
+   * @param {Array.<Array.<String>>} image
+   * @param {Boolean} filterGrey
    */
-
-  var getMatchPercentage = function (rgbA, rgbB) {
-    let match = 100 - deltaE(rgbA, rgbB);
-    if (match < 0) match = 0;
-    return Math.round(match * 10) / 10;
-  };
-
-  /**
-   * Get Euclidean distance between two colors
-   */
-  var deltaE = function (rgbA, rgbB) {
-    let labA = rgb2lab(rgbA);
-    let labB = rgb2lab(rgbB);
-    let deltaL = labA[0] - labB[0];
-    let deltaA = labA[1] - labB[1];
-    let deltaB = labA[2] - labB[2];
-    let c1 = Math.sqrt(labA[1] * labA[1] + labA[2] * labA[2]);
-    let c2 = Math.sqrt(labB[1] * labB[1] + labB[2] * labB[2]);
-    let deltaC = c1 - c2;
-    let deltaH = deltaA * deltaA + deltaB * deltaB - deltaC * deltaC;
-    deltaH = deltaH < 0 ? 0 : Math.sqrt(deltaH);
-    let sc = 1.0 + 0.045 * c1;
-    let sh = 1.0 + 0.015 * c1;
-    let deltaLKlsl = deltaL / 1.0;
-    let deltaCkcsc = deltaC / sc;
-    let deltaHkhsh = deltaH / sh;
-    let i =
-      deltaLKlsl * deltaLKlsl +
-      deltaCkcsc * deltaCkcsc +
-      deltaHkhsh * deltaHkhsh;
-    return i < 0 ? 0 : Math.sqrt(i);
-  };
-
-  /**
-   * To compute the color contrast we need to convert to LAB colors
-   */
-
-  var rgb2lab = function (rgb) {
-    let r = rgb[0] / 255,
-      g = rgb[1] / 255,
-      b = rgb[2] / 255,
-      x,
-      y,
-      z;
-    r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-    g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-    b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-    x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
-    y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.0;
-    z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
-    x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
-    y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
-    z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
-    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
-  };
-
-  /**
-   * @param e1 {{r:number,g:number,b:number}}
-   * @param e2 {{r:number,g:number,b:number}}
-   * @returns {number}
-   */
-  var ColourDistance = function (e1, e2) {
-    let rmean = (e1.r + e2.r) / 2;
-    let r = e1.r - e2.r;
-    let g = e1.g - e2.g;
-    let b = e1.b - e2.b;
-    return Math.sqrt(
-      (((512 + rmean) * r * r) >> 8) +
-        4 * g * g +
-        (((767 - rmean) * b * b) >> 8)
-    );
-  };
-
-  /**
-   * @typedef {{r: number, g: number, b: number}} RGB
-   */
-
-  /**
-   * @param hex {string}
-   * @returns {RGB}
-   */
-  var hexToRgb = function (hex) {
-    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 2 ** 4),
-          g: parseInt(result[2], 2 ** 4),
-          b: parseInt(result[3], 2 ** 4),
+  function drawImage(coords, image) {
+    generateTextDOM("Task of drawing an image started.");
+    var Tasker = TaskerFactory();
+    globalThis[dictionary.get("scope")].Tasker = Tasker;
+    function generateTasks() {
+      for (var yAxis = 0; yAxis < image.length; yAxis++) {
+        for (var xAxis = 0; xAxis < image[yAxis].length; xAxis++) {
+          var pixel = image[yAxis][xAxis];
+          var [x, y] = coords;
+          x += xAxis;
+          y += yAxis;
+          var color = pixel.charCodeAt(0) - "0".charCodeAt(0);
+          var canvas_color = BababotWS.BBY_get_pixel(x, y);
+          if (color == 64 || canvas_color == color || canvas_color == -1) {
+            continue;
+          }
+          Tasker.addTask({
+            x: x,
+            y: y,
+            color: color,
+          });
         }
-      : null;
-  };
-
-  /**
-   * @param {RGB} rgb
-   * @returns {[number,number,number]}
-   */
-  var legacyRGB = function (rgb) {
-    return [rgb.r, rgb.g, rgb.b];
-  };
-
-  /**
-   * @param {RGB} rgb
-   * @returns {number}
-   */
-  var rgbToPixelPlacePalette = function (rgb) {
-    let closest;
-    let final;
-    for (var color of Colors) {
-      var distance = getMatchPercentage(
-        legacyRGB(rgb),
-        legacyRGB(hexToRgb(color.hex))
-      );
-      if (!closest) {
-        closest = distance;
-      } else {
-        closest = Math.max(closest, distance);
-      }
-      if (closest === distance) {
-        final = color.code;
       }
     }
-    return final;
-  };
+    if (Menu.intervalCode) {
+      toastr.warning("You still bot somewhere. Stop it!");
+      return;
+    }
+    generateTasks();
+    Menu.intervalCode = setInterval(function () {
+      var task = Tasker.getTask();
+      if (task?.type == "sleep") {
+        return;
+      }
+      if (Menu.state == true) {
+        clearInterval(Menu.intervalCode);
+        Menu.intervalCode = undefined;
+        return;
+      } else if (task == undefined) {
+        Tasker.destroy();
+        for (var i = 0; i < 500 / cfg.timeout; i++) {
+          Tasker.addTask({ type: "sleep" });
+        }
+        generateTasks();
+        return;
+      }
+      BababotWS.BBY_put_pixel(task.x, task.y, task.color);
+    }, cfg.timeout);
+  }
+  Menu.start.on("click", function () {
+    if (Menu.pixif == undefined) {
+      toastr.error("Image not loaded.");
+      generateTextDOM("Task failed with 1");
+    }
+    Menu.state = false;
+    if ([!Menu.y.val(), !Menu.x.val()].indexOf(true) != -1) {
+      toastr.error("Coordinates not specified or specified wrong.");
+      generateTextDOM("Task failed with 2");
+    }
+    Menu.coords = [Menu.x.val(), Menu.y.val()].map(Number);
+    drawImage(Menu.coords, Menu.pixif);
+  });
+  Menu.stop.on("click", function () {
+    generateTextDOM("Task stopped with 0");
+    Menu.state = true;
+    clearInterval(Menu.intervalCode);
+    Menu.intervalCode = undefined;
+  });
 
-  /**
-   * @param c {number}
-   * @returns {string}
-   */
-  var componentToHex = function (c) {
-    var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
-  };
-
-  /**
-   * @param {RGB} packet
-   * @returns {string}
-   */
-  var rgbToHex = function (packet) {
-    return (
-      "#" +
-      componentToHex(packet.r) +
-      componentToHex(packet.g) +
-      componentToHex(packet.b)
+  function generatePixif(ctx) {
+    var imageData = ctx.getImageData(
+      0,
+      0,
+      Menu.canvas.width,
+      Menu.canvas.height
     );
+    var output = "";
+    for (var i = 0; i < imageData.data.length; i += 4) {
+      if ((i / 4) % Menu.canvas.width === 0 && i != 0) {
+        output += "\n";
+      }
+      /**
+       * @type {RGB}
+       */
+      var colorInfo = {
+        r: imageData.data[i],
+        g: imageData.data[i + 1],
+        b: imageData.data[i + 2],
+      };
+      /**
+       * @type {number}
+       */
+      var color;
+      var colorHex = rgbToHex(colorInfo);
+      if (colorHex.toUpperCase() == "#BABAB0") {
+        color = 64;
+      }
+      for (var pixelColor of Colors) {
+        if (pixelColor.hex.toLowerCase() === colorHex.toLowerCase()) {
+          color = pixelColor.code;
+        }
+      }
+      if (color == undefined) {
+        color = rgbToPixelPlacePavarte(colorInfo);
+      }
+      output += pixelPlaceToPixif(color);
+    }
+    Menu.pixif = output.split("\n");
+  }
+  Menu.file.on("change", function () {
+    generateTextDOM("Addition of a file");
+    var reader = new FileReader();
+    var file = Menu.file[0].files[0];
+    if (file) {
+      reader.onloadend = function () {
+        Menu.img.src = String(reader.result);
+        Menu.img.onload = function () {
+          var ctx = Menu.canvas.getContext("2d");
+          Menu.original.text(
+            `Original size: ${Menu.img.width}px to ${Menu.img.height}px`
+          );
+          ctx.fillStyle = "#BABAB0";
+          ctx.fillRect(0, 0, Menu.canvas.width, Menu.canvas.height);
+          ctx.drawImage(Menu.img, 0, 0, Menu.canvas.width, Menu.canvas.height);
+          generatePixif(ctx);
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  var size_callback = function () {
+    var width = Number(Menu.width.val());
+    var height = Number(Menu.height.val());
+    if ([!!width, !!height].includes(false)) {
+      return -1;
+    }
+    Menu.canvas.width = width;
+    Menu.canvas.height = height;
+    /**
+     * @type {CanvasRenderingContext2D}
+     */
+    var ctx = Menu.canvas.getContext("2d");
+    ctx.fillStyle = "#BABAB0";
+    ctx.fillRect(0, 0, Menu.canvas.width, Menu.canvas.height);
+    ctx.drawImage(Menu.img, 0, 0, Menu.canvas.width, Menu.canvas.height);
+    generatePixif(ctx);
+  };
+  Menu.width.on("change", size_callback);
+  Menu.height.on("change", size_callback);
+
+  uiMenu.css(BABABOT_UI_MENU_CSS);
+
+  $(document.body).append(uiMenu);
+  var bababot = $('<a class="rainbowText">Bababot</a>').css(BABABOT_TEXT_CSS);
+  $("#container").append(bababot);
+  var buttons = $("#menu-buttons");
+  var elem = $(
+    '<a href="#" title="Bot Menu" class="grey margin-top-button"><img src="https://svgshare.com/i/_CM.svg" alt="icon"></a>'
+  );
+  elem.on("click", function () {
+    uiMenu.fadeToggle("fast");
+  });
+  buttons.append(elem);
+
+  document.onpaste = function (event) {
+    if (uiMenu.css("display") == "none") {
+      return;
+    }
+    var items = (event.clipboardData || event.originalEvent.clipboardData)
+      .items;
+    console.log(JSON.stringify(items)); // will give you the mime types
+    for (var index in items) {
+      var item = items[index];
+      if (item.kind === "file") {
+        var blob = item.getAsFile();
+        var reader = new FileReader();
+        reader.onload = function (event) {
+          console.log("Breakpoint 2");
+          Menu.img.src = String(reader.result);
+          Menu.img.onload = function () {
+            console.log("Breakpoint 3");
+            var ctx = Menu.canvas.getContext("2d");
+            Menu.original.text(
+              `Original size: ${Menu.img.width}px to ${Menu.img.height}px`
+            );
+            ctx.fillStyle = "#BABAB0";
+            ctx.fillRect(0, 0, Menu.canvas.width, Menu.canvas.height);
+            ctx.drawImage(
+              Menu.img,
+              0,
+              0,
+              Menu.canvas.width,
+              Menu.canvas.height
+            );
+            generatePixif(ctx);
+          };
+        }; // data url!
+        reader.readAsDataURL(blob);
+      }
+    }
   };
 
-  /**
-   * @param {number} pixelplaceColor
-   * @returns {string}
-   */
-  var pixelPlaceToPixif = function (pixelplaceColor) {
-    return String.fromCharCode("0".charCodeAt(0) + parseInt(pixelplaceColor));
-  };
+  function generateTextDOM(msg) {
+    tosend.push(msg);
+  }
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+      var buttonTabs = $("#chat > div.tabs.no-select");
+      var chatParent = $("#chat");
+      var bababotButton = $(
+        '<a href="#"><span class="title">Bababot</span></a>'
+      );
+      var logParent = $('<div class="messages" style="display: none;">');
+
+      setTimeout(function () {
+        generateTextDOM = function (msg) {
+          var row = $("<div>").addClass("row");
+          var text = $("<span>").addClass("text");
+          text.text(msg);
+          text.css("color", "#FFEEFF");
+          row.append(text);
+          logParent.append(row);
+          logParent.animate({ scrollTop: logParent.prop("scrollHeight") });
+        };
+        tosend.forEach(generateTextDOM);
+        buttonTabs.append(bababotButton);
+        chatParent.append(logParent);
+      }, 5120);
+      bababotButton.on("click", function () {
+        $(".selected").removeClass("selected");
+        $(bababotButton).addClass("selected");
+        $(".messages").hide();
+        console.log(logParent);
+        logParent.show();
+      });
+      var Tasker = TaskerFactory();
+      function getCoordinate() {
+        var raw = $("#coordinates").text();
+        var arr = raw.split(",").map((x) => parseInt(x.replace(",", "")));
+        return arr;
+      }
+      var start_coordinate, end_coordinate;
+      var code;
+      interact("#canvas").on("click", function () {
+        if (start_coordinate) {
+          generateTextDOM(
+            "START DRAWING " +
+              JSON.stringify(start_coordinate) +
+              " INTO " +
+              JSON.stringify(end_coordinate)
+          );
+          end_coordinate = getCoordinate();
+          var color =
+            $(
+              Array.from($("#pavarte-buttons").children()).find(
+                (x) => $(x).hasClass("selected") == true
+              )
+            ).attr("data-id") - 0;
+          if (!color && color != 0) {
+            generateTextDOM("No selected color. Return with -1");
+            return -1;
+          }
+          for (var y = start_coordinate[1]; y <= end_coordinate[1]; y++) {
+            for (var x = start_coordinate[0]; x <= end_coordinate[0]; x++) {
+              var mvpModeX = (function () {
+                if ((y - start_coordinate[1]) % 2 == 0) {
+                  return x;
+                } else {
+                  return end_coordinate[0] - x + start_coordinate[0];
+                }
+              })();
+              var canvas_color = BababotWS.BBY_get_pixel(mvpModeX, y);
+              if (canvas_color == color || canvas_color == -1) {
+                continue;
+              }
+              Tasker.addTask({
+                // @TODO Tasker
+                x: mvpModeX,
+                y: y,
+                color: color, // @TODO getColor()
+              });
+            }
+          }
+          code =
+            code ||
+            setInterval(function () {
+              var task = Tasker.getTask();
+              if (task == undefined) {
+                Tasker.destroy();
+                clearInterval(code);
+                code = undefined;
+                return;
+              }
+              while (BababotWS.BBY_get_pixel(task.x, task.y) == task.color) {
+                task = Tasker.getTask();
+                if (task == undefined) {
+                  Tasker.destroy();
+                  clearInterval(code);
+                  code = undefined;
+                  return;
+                }
+              }
+              BababotWS.BBY_put_pixel(task.x, task.y, task.color);
+            }, cfg.timeout);
+          start_coordinate = undefined;
+        } else {
+          start_coordinate = getCoordinate(); //@TODO getCoordinate
+          generateTextDOM(
+            "START DRAWING FROM " + JSON.stringify(start_coordinate)
+          );
+        }
+        interact('a[data-id="painting"]').on("load", function () {
+          $('a[data-id="painting"]').css("display", "block");
+        });
+      });
+      // BABABOT ANTI DOT BEGIN
+      function antiDot(silentPixelFarm) {
+        var trustworthy = [];
+        var cfg = {
+          protectedArea: undefined,
+          color: undefined,
+          timeout: 20,
+        };
+        var protectedArea = undefined;
+        var color = undefined;
+        var Tasker = TaskerFactory();
+        var code =
+          code ||
+          setInterval(function () {
+            var task = Tasker.getTask();
+            if (task == undefined) {
+              return;
+            }
+            while (BababotWS.BBY_get_pixel(task.x, task.y) == task.color) {
+              task = Tasker.getTask();
+              if (task == undefined) {
+                return;
+              }
+            }
+            BababotWS.BBY_put_pixel(task.x, task.y, task.color);
+          }, cfg.timeout);
+        BababotWS.addEventListener("message", function (msg) {
+          var json = JSON.parse(msg.data.replace("42", ""));
+          var code = json[0];
+          var content = json[1];
+          if (cfg.protectedArea == undefined || cfg.color == undefined) {
+            return;
+          }
+          if (code == "p") {
+            for (var colorPacket of content) {
+              var x = colorPacket[0];
+              var y = colorPacket[1];
+              var color = colorPacket[2];
+              if (
+                cfg.protectedArea[0][1] > x &&
+                x > cfg.protectedArea[0][0] &&
+                cfg.protectedArea[1][1] > y &&
+                y > cfg.protectedArea[1][0]
+              ) {
+                if (color != cfg.color) {
+                  Tasker.addTask({ x: x, y: y, color: cfg.color });
+                }
+              }
+            }
+          }
+        });
+        globalThis.stuff = { config: cfg, code: code, tasker: Tasker };
+      }
+      globalThis.antiDot = antiDot;
+      globalThis.color = function (y) {
+        var color = chroma(y).rgb();
+        return rgbToPixelPlacePavarte({
+          r: color[0],
+          g: color[1],
+          b: color[2],
+        });
+      };
+    },
+    false
+  );
 }
+globalThis.BBY = BBY
