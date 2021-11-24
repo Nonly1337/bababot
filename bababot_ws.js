@@ -120,7 +120,7 @@
         });
       }
       BBY_on(code,callback) {
-        this.$callbacks[code] = this.$callbacks || []
+        this.$callbacks[code] = this.$callbacks[code] || []
         this.$callbacks[code].push(callback)
       }
       BBY_emit(msg, props) {
