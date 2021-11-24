@@ -109,7 +109,7 @@
           let json = JSON.parse(message.data.replace('42',''))
           let code = json[0]
           let content = json[1]
-          if ($callbacks[code]) {
+          if (this.$callbacks[code]) {
             for (const callback of this.$callbacks[code]) {
               callback(content)
             }
