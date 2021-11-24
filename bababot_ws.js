@@ -102,7 +102,7 @@
       $callbacks = {}
       constructor(url, header) {
         super(url, header);
-        this.addEventListener('message',function(message) {
+        this.addEventListener('message',message => {
           if (message.data.indexOf('42') == -1) {
             return
           }
@@ -110,7 +110,7 @@
           let code = json[0]
           let content = json[1]
           if ($callbacks[code]) {
-            for (const callback of $callbacks[code]) {
+            for (const callback of this.$callbacks[code]) {
               callback(content)
             }
           }
