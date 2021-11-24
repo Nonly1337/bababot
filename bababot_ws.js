@@ -121,7 +121,7 @@
       }
       BBY_on(code,callback) {
         this.$callbacks[code] = this.$callbacks || []
-        this.$callbacks.push(callback)
+        this.$callbacks[code].push(callback)
       }
       BBY_emit(msg, props) {
         if (this.readyState != this.OPEN) {
