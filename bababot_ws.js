@@ -1,4 +1,3 @@
-// dont you dare steal my code jk
 (function () {
   const palette = {
     order: [
@@ -95,11 +94,29 @@
 
   Object.defineProperty(window, "WebSocket", {
     value: class extends WebSocket {
+      $callbacks = {}
       constructor(url, header) {
         super(url, header);
+        this.addEventListener('message',function(message) {
+          if (message.data.indexOf('42') == -1) {
+            return
+          }
+          let json = JSON.parse(message.data.replace('42',''))
+          let code = json[0]
+          let content = json[1]
+          if ($callbacks[code]) {
+            for (const callback of $callbacks[code]) {
+              callback(content)
+            }
+          }
+        })
         Object.defineProperty(window, "BababotWS", {
           value: this,
         });
+      }
+      BBY_on(code,callback) {
+        this.$callbacks[code] = this.$callbacks || []
+        this.$callbacks.push(callback)
       }
       BBY_emit(msg, props) {
         if (this.readyState != this.OPEN) {
@@ -132,3 +149,4 @@
     writable: false,
   });
 })();
+globalThis.BBY = BBY
