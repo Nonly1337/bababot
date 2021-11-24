@@ -1,3 +1,8 @@
+/**
+ * @description WebSocket backport of Bababot
+ * @author @bababoyisnotapopularname
+ */
+
 (function () {
   const palette = {
     order: [
@@ -138,7 +143,6 @@
           target: "",
           color: 11,
         };
-        //what we do here is we overwrite some properties if we want to
 
         packet = { ...packet, ...full };
 
@@ -149,4 +153,3 @@
     writable: false,
   });
 })();
-globalThis.BBY = BBY
