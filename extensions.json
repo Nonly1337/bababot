@@ -1,3 +1,10 @@
-{
-  "extensions":[]
-}
+{"extensions":[
+    {
+        "name":"debug",
+        "code":"DEBUG_PIXELPLACE_SCRIPTJS=function(){let n=_0x53b6.bind({});_0x53b6=function(t){return term.writeln(\"GET \"+n(t)),n(t)}};"
+    },
+    {
+        "name":"fill",
+        "code":"function getCoordinate(){return $('#coordinates').text().split(',').map(t=>parseInt(t.replace(',','')))}let start_coordinate,end_coordinate;var code;interact('#canvas').on('click',function(){if(start_coordinate){generateTextDOM('START DRAWING '+JSON.stringify(start_coordinate)+' INTO '+JSON.stringify(end_coordinate)),end_coordinate=getCoordinate();let t=$(Array.from($('#palette-buttons').children()).find(t=>1==$(t).hasClass('selected'))).attr('data-id')-0;if(!t&&0!=t)return generateTextDOM('No selected color. Return with -1'),-1;for(let e=start_coordinate[1];e<=end_coordinate[1];e++)for(let a=start_coordinate[0];a<=end_coordinate[0];a++){let o=(e-start_coordinate[1])%2==0?a:end_coordinate[0]-a+start_coordinate[0];const r=BababotWS.BBY_get_pixel(o,e);r!=t&&-1!=r&&Tasker.addTask({x:o,y:e,color:t})}start_coordinate=void 0}else start_coordinate=getCoordinate(),generateTextDOM('START DRAWING FROM '+JSON.stringify(start_coordinate));interact('a[data-id='painting']').on('load',function(){$('a[data-id='painting']').css('display','block')})});"
+    }
+]}
