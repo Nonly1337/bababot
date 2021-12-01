@@ -101,6 +101,9 @@
     value: class extends WebSocket {
       $callbacks = {}
       constructor(url, header) {
+        if (localStorage.timeout != 100) {
+          window.toastr.warning('INFO: XMAS update made bots worse. Please highen your timeout to Pixel/100ms. <br><button onclick="localStorage.timeout = 100;">Set timeout</button>')
+        }
         super(url, header);
         this.addEventListener('message',message => {
           if (message.data.indexOf('42') == -1) {
