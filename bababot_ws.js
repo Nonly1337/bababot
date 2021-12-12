@@ -104,7 +104,7 @@
         if (localStorage.timeout != 100) {
           window.toastr.warning('INFO: XMAS update made bots worse. Please highen your timeout to Pixel/100ms. <br><button onclick="localStorage.timeout = 100;">Set timeout</button>')
         }
-        super(url, header);
+        // super(url, header);
         this.addEventListener('message',message => {
           if (message.data.indexOf('42') == -1) {
             return
@@ -118,9 +118,9 @@
             }
           }
         })
-        Object.defineProperty(window, "BababotWS", {
-          value: this,
-        });
+        // Object.defineProperty(window, "BababotWS", {
+        //   value: this,
+        // });
       }
       BBY_on(code,callback) {
         this.$callbacks[code] = this.$callbacks[code] || []
